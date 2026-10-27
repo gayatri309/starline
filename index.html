@@ -10,6 +10,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script src="firebase-config.js"></script>
 <title>Starline Lead Desk</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
@@ -244,6 +245,22 @@ code.ph{background:var(--sunk);border-radius:4px;padding:1px 5px;font-size:13px}
 
 body{margin:0}
 [hidden]{display:none!important}
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.pcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:grid}
+.pimg{aspect-ratio:16/9;background:var(--sunk);display:grid;place-items:center;color:var(--muted);font-size:13px;max-width:100%}
+.pimg img{width:100%;height:100%;object-fit:cover;display:block}
+.pinfo{padding:12px 14px;display:grid;gap:6px}
+.pinfo .l1{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.pinfo .l1 b{font-size:16px;min-width:0}
+.pinfo .meta{color:var(--muted);font-size:13.5px}
+.pinfo .acts{display:flex;gap:6px;flex-wrap:wrap}
+.thumbs{display:flex;gap:10px;flex-wrap:wrap}
+.thumb{position:relative;width:110px;height:82px;border-radius:8px;overflow:hidden;background:var(--sunk);border:1px solid var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .x{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;font-size:16px;line-height:1}
+.thumb.add{display:grid;place-items:center;border-style:dashed;color:var(--brand);font-weight:600;font-size:13px;cursor:pointer}
+#notifyBtn.on{border-color:var(--ok);color:var(--ok)}
+@media (max-width:860px){nav.tabs button{font-size:11px;padding:6px 4px}.lgonly{display:none}}
 /* login */
 .login{min-height:100vh;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-left,0px))}
 .login .box{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:26px 24px;display:grid;gap:16px}
@@ -286,7 +303,8 @@ body{margin:0}
     <nav class="tabs" aria-label="Sections">
       <button type="button" data-view="today" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Today <span class="badge" id="dueBadge" hidden>0</span></button>
       <button type="button" data-view="leads"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.8.8 3 2.6 3.5 5.2"/></svg>Leads</button>
-      <button type="button" data-view="new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New enquiry</button>
+      <button type="button" data-view="new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New<span class="lgonly"> enquiry</span></button>
+      <button type="button" data-view="props"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg>Properties</button>
       <button type="button" data-view="msgs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5 5.3 16A8 8 0 1 1 8 18.7z"/></svg>Messages</button>
     </nav>
   </div>
@@ -300,6 +318,7 @@ body{margin:0}
       <div><h1>Today's follow-ups</h1><p class="sub" id="todayDate"></p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button type="button" class="btn sm ghost meonly" id="signOut2">Sign out</button>
+        <button type="button" class="btn" id="notifyBtn" hidden>Turn on reminders</button>
         <button type="button" class="btn" id="refreshBtn">Refresh</button>
         <button type="button" class="btn primary" data-go="new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New enquiry</button>
       </div>
@@ -373,6 +392,12 @@ body{margin:0}
         <button type="submit" class="btn primary" id="saveBtn">Save enquiry</button>
       </div>
     </form>
+  </section>
+
+  <section id="v-props" hidden>
+    <div class="pagehead"><div><h1>Properties</h1><p class="sub" id="propsSub">Projects shown to customers in the customer app.</p></div>
+      <button type="button" class="btn primary" id="addProp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add property</button></div>
+    <div id="propsBox"></div>
   </section>
 
   <section id="v-msgs" hidden>
@@ -497,10 +522,11 @@ async function patchLead(id,patch,notes,okMsg){
 /* ---------- views ---------- */
 function setView(v){
   view=v;
-  for(const k of ["today","leads","new","msgs"])$("#v-"+k).hidden=k!==v;
+  for(const k of ["today","leads","new","props","msgs"])$("#v-"+k).hidden=k!==v;
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.view===v?"page":"false"));
   if(v!=="leads")$("#detail").classList.remove("open");
   if(v==="new"&&!editId)resetForm();
+  if(v==="props"&&!propEdit)propsLoaded=false;
   render();window.scrollTo(0,0);
 }
 document.querySelector("nav.tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-view]");if(b){if(b.dataset.view==="new")editId=null;setView(b.dataset.view)}});
@@ -513,6 +539,8 @@ function render(){
   if(view==="today")renderToday();
   else if(view==="leads"){renderLeads();renderDetail()}
   else if(view==="msgs"&&!isTyping())renderTpls();
+  else if(view==="props"&&!propEdit)renderProps();
+  renderNotifyBtn();
 }
 
 function stagePill(l){const s=ST[l.stage]||ST.new;return `<span class="stage ${s.c}">${s.t}</span>`}
@@ -652,6 +680,7 @@ function renderDetail(){
         :`<div class="hint">Pick a message above. You can edit it before opening WhatsApp.</div>`}
       </div></div>
     <div class="sec"><h3>Requirement</h3><dl class="kv">${kv.map(([k,v,c])=>`<div class="${c||""}"><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl></div>
+    ${referralHtml(l)}
     <div class="sec"><h3>Activity</h3>
       <div class="notebox" style="margin-bottom:8px"><input type="text" id="noteIn" placeholder="Add a note, e.g. Called, wants east-facing flat"><button type="button" class="btn dark sm" id="addNote">Add</button></div>
       <ul class="log">${(l.log||[]).slice().reverse().map(x=>`<li><time>${fmtLog(x.at)}</time><span>${esc(x.text)}${x.by?` <span class="by">· ${esc(x.by)}</span>`:""}</span></li>`).join("")||'<li><time></time><span style="color:var(--muted)">No activity yet</span></li>'}</ul></div>
@@ -784,6 +813,153 @@ $("#tpls").addEventListener("focusout",()=>{if(tplTimer){saveTpls()}});
 $("#tpls").addEventListener("click",e=>{const b=e.target.closest("[data-deltpl]");if(b){tpls=tpls.filter((_,i)=>i!==+b.dataset.deltpl);renderTpls();saveTpls()}});
 $("#addTpl").addEventListener("click",()=>{const i=tpls.length;tpls=[...tpls,{id:"new"+i,title:"New message",text:"Hi {name}, "}];renderTpls();const x=$("#tx_"+i);x&&x.focus()});
 
+/* ---------- properties (team) ---------- */
+const CUSTOMER_URL=new URL("customer/",location.href).href;
+let props=[],propsLoaded=false,propEdit=null,propDel=false,propBusy=false;
+const PCONF=["1 BHK","2 BHK","3 BHK","Shop"],PSTAT=["Ready To Move","Under Construction"];
+let propsLoading=false;
+async function loadProps(){if(propsLoading)return;propsLoading=true;try{props=await api("listProperties",token);propsLoaded=true;renderProps()}catch(e){failToast(e);propsLoaded=true;renderProps()}finally{propsLoading=false}}
+function renderProps(){
+  const box=$("#propsBox");
+  if(propEdit){box.innerHTML=propFormHtml(propEdit);return}
+  if(!propsLoaded){box.innerHTML=`<div class="loading"><span class="spin"></span>Loading properties…</div>`;loadProps();return}
+  const pub=props.filter(p=>p.published).length;
+  $("#propsSub").textContent=`${pub} published · ${props.length-pub} draft`;
+  box.innerHTML=props.length?`<div class="plist">${props.map(p=>`<div class="pcard">
+    <div class="pimg">${p.photos&&p.photos[0]?`<img src="${esc(p.photos[0])}" alt="" loading="lazy">`:`<span>No photo</span>`}</div>
+    <div class="pinfo"><div class="l1"><b>${esc(p.name)}</b><span class="stage ${p.published?"s-booked":"s-contacted"}">${p.published?"Published":"Draft"}</span></div>
+      <div class="meta">${esc([p.location,(p.config||[]).join(", "),p.price].filter(Boolean).join(" · "))}</div>
+      <div class="acts"><button type="button" class="btn sm" data-pedit="${esc(p.id)}">Edit</button>
+      ${p.published?`<a class="btn sm wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(p.name+(p.location?", "+p.location:"")+"\n"+(p.price||"")+"\n\nSee photos and book a site visit: "+CUSTOMER_URL+"?p="+p.id)}">${icoWa}Share</a>`:""}</div></div></div>`).join("")}</div>`
+    :`<div class="empty"><b>No properties yet</b>Add your first project with <strong>Add property</strong>. Published properties appear in the customer app.</div>`;
+}
+function propFormHtml(p){
+  const chk=(n,v,on,type)=>`<label class="opt"><input type="${type}" name="${n}" value="${esc(v)}" ${on?"checked":""}><span>${esc(v)}</span></label>`;
+  return `<form class="enq" id="propForm" novalidate>
+   <div class="fsec"><div class="pillhead">${p.id?"Edit property":"New property"}</div>
+    <div class="grid2">
+     <div class="fld"><label for="pp_name">Project name <span class="req">*</span></label><input type="text" id="pp_name" value="${esc(p.name||"")}" placeholder="e.g. Global City Heights, Wing B"></div>
+     <div class="fld"><label for="pp_loc">Location</label><input type="text" id="pp_loc" value="${esc(p.location||"")}" placeholder="e.g. Global City, Virar West"></div>
+     <div class="fld"><label for="pp_price">Price shown to customers</label><input type="text" id="pp_price" value="${esc(p.price||"")}" placeholder="e.g. ₹42 L onwards"></div>
+     <div class="fld"><label for="pp_lakh">Starting price (₹ lakh, for filters)</label><input type="text" inputmode="decimal" id="pp_lakh" value="${p.priceLakh||""}" placeholder="42"></div>
+     <div class="fld"><label for="pp_area">Carpet area</label><input type="text" id="pp_area" value="${esc(p.area||"")}" placeholder="e.g. 380–620 sq ft"></div>
+     <div class="fld"><label for="pp_pos">Possession</label><input type="text" id="pp_pos" value="${esc(p.possession||"")}" placeholder="e.g. Dec 2027 / Ready"></div>
+    </div>
+    <div class="fld"><span class="lbl">Configuration</span><div class="opts">${PCONF.map(v=>chk("pp_conf",v,(p.config||[]).includes(v),"checkbox")).join("")}</div></div>
+    <div class="fld"><span class="lbl">Status</span><div class="opts">${PSTAT.map(v=>chk("pp_stat",v,p.status===v,"radio")).join("")}</div></div>
+    <div class="fld"><label for="pp_desc">Description</label><textarea id="pp_desc" rows="4" placeholder="Amenities, distance from station, highlights…">${esc(p.description||"")}</textarea></div>
+   </div>
+   <div class="fsec"><div class="pillhead">Photos</div>
+    <div class="thumbs">${(p.photos||[]).map((u,i)=>`<div class="thumb"><img src="${esc(u)}" alt=""><button type="button" class="x" data-pdelphoto="${i}" aria-label="Remove photo">×</button></div>`).join("")}
+     <label class="thumb add" for="pp_files">${propBusy?'<span class="spin"></span>':"+ Add photos"}</label></div>
+    <input type="file" id="pp_files" accept="image/*" multiple hidden>
+    <p class="sub" style="margin:0">Up to 8 photos. The first photo is the cover.</p>
+   </div>
+   <div class="fsec"><label class="opt" style="justify-self:start"><input type="checkbox" id="pp_pub" ${p.published?"checked":""}><span>Show in the customer app</span></label></div>
+   <div class="formfoot"><span class="err" id="ppErr" role="alert"></span>
+    ${p.id?(propDel?`<span class="confirm"><span>Delete this property?</span><button type="button" class="btn sm danger" id="ppDelYes">Delete</button><button type="button" class="btn sm" id="ppDelNo">Keep</button></span>`:`<button type="button" class="btn ghost danger" id="ppDel">Delete</button>`):""}
+    <button type="button" class="btn ghost" id="ppCancel">Cancel</button>
+    <button type="submit" class="btn primary" id="ppSave" ${propBusy?"disabled":""}>Save property</button></div>
+  </form>`;
+}
+function readPropForm(){
+  if(!$("#propForm"))return propEdit;
+  return {...propEdit,name:$("#pp_name").value.trim(),location:$("#pp_loc").value.trim(),price:$("#pp_price").value.trim(),
+    priceLakh:parseFloat($("#pp_lakh").value)||0,area:$("#pp_area").value.trim(),possession:$("#pp_pos").value.trim(),
+    description:$("#pp_desc").value.trim(),config:[...document.querySelectorAll('input[name="pp_conf"]:checked')].map(i=>i.value),
+    status:(document.querySelector('input[name="pp_stat"]:checked')||{}).value||"",published:$("#pp_pub").checked};
+}
+$("#addProp").addEventListener("click",()=>{propEdit={photos:[],config:[],published:true};propDel=false;renderProps();window.scrollTo(0,0)});
+$("#propsBox").addEventListener("click",async e=>{
+  const ed=e.target.closest("[data-pedit]");
+  if(ed){propEdit=JSON.parse(JSON.stringify(props.find(p=>p.id===ed.dataset.pedit)));propDel=false;renderProps();window.scrollTo(0,0);return}
+  const dp=e.target.closest("[data-pdelphoto]");
+  if(dp){propEdit=readPropForm();propEdit.photos.splice(+dp.dataset.pdelphoto,1);renderProps();return}
+  if(e.target.closest("#ppCancel")){propEdit=null;renderProps();return}
+  if(e.target.closest("#ppDel")){propEdit=readPropForm();propDel=true;renderProps();return}
+  if(e.target.closest("#ppDelNo")){propEdit=readPropForm();propDel=false;renderProps();return}
+  if(e.target.closest("#ppDelYes")){
+    try{await api("deleteProperty",token,propEdit.id);props=props.filter(p=>p.id!==propEdit.id);toast("Property deleted");propEdit=null;renderProps()}catch(x){failToast(x)}
+  }
+});
+$("#propsBox").addEventListener("change",async e=>{
+  if(e.target.id!=="pp_files")return;
+  const files=[...e.target.files].slice(0,8-(propEdit.photos||[]).length);
+  if(!files.length){toast("You can add up to 8 photos.");return}
+  propEdit=readPropForm();propBusy=true;renderProps();
+  for(const f of files){
+    try{const b64=await shrink(f);const url=await api("uploadPhoto",token,b64,"image/jpeg",f.name);propEdit.photos.push(url);}
+    catch(x){failToast(x);break}
+  }
+  propBusy=false;renderProps();
+});
+$("#propsBox").addEventListener("submit",async e=>{
+  e.preventDefault();const p=readPropForm(),err=$("#ppErr");
+  if(!p.name){err.textContent="Enter the project name.";$("#pp_name").focus();return}
+  propBusy=true;$("#ppSave").disabled=true;$("#ppSave").textContent="Saving…";
+  try{const s=await api("saveProperty",token,p);const i=props.findIndex(x=>x.id===s.id);if(i>=0)props[i]=s;else props.unshift(s);
+    toast(s.published?"Saved and shown to customers":"Saved as draft");propEdit=null}
+  catch(x){err.textContent=x.message}
+  propBusy=false;renderProps();
+});
+function shrink(file){return new Promise((res,rej)=>{
+  const img=new Image(),url=URL.createObjectURL(file);
+  img.onload=()=>{const m=1400,s=Math.min(1,m/Math.max(img.width,img.height)),c=document.createElement("canvas");
+    c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    URL.revokeObjectURL(url);res(c.toDataURL("image/jpeg",0.8).split(",")[1])};
+  img.onerror=()=>rej(new Error("That file isn't a photo the browser can read."));img.src=url;})}
+
+/* ---------- referral link on a lead ---------- */
+function referralHtml(l){
+  const link=CUSTOMER_URL+"?ref="+encodeURIComponent(l.id);
+  return `<div class="sec"><h3>Referral link</h3>
+    <p class="hint" style="margin:0 0 8px">Ask happy customers to share this. Anyone who books a visit through it shows up as their referral.</p>
+    <div class="row2" style="display:flex;gap:8px;flex-wrap:wrap">
+      <a class="btn sm wa" target="_blank" rel="noopener" href="https://wa.me/${waNum(l.phone)}?text=${encodeURIComponent("Hi "+((l.name||"").split(" ")[0])+", thank you for choosing Starline Realtors! If friends or family are looking for a home, share this link with them. They can see our projects and book a site visit: "+link)}">${icoWa}Send to customer</a>
+      <button type="button" class="btn sm" data-copyref="${esc(link)}">Copy link</button></div></div>`;
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-copyref]");if(b)copy(b.dataset.copyref,"Referral link copied")});
+
+/* ---------- reminders (push notifications) ---------- */
+function notifyState(){
+  const cfg=window.STARLINE_FIREBASE;
+  if(!("Notification" in window)||!("serviceWorker" in navigator))return "unsupported";
+  if(!cfg||!cfg.apiKey)return "notready";
+  if(Notification.permission==="granted"&&store.get("starline_push")==="on")return "on";
+  if(Notification.permission==="denied")return "blocked";
+  return "off";
+}
+function renderNotifyBtn(){
+  const b=$("#notifyBtn");if(!b)return;const s=notifyState();
+  b.hidden=s==="unsupported";
+  b.textContent=s==="on"?"Reminders on":s==="blocked"?"Reminders blocked":"Turn on reminders";
+  b.classList.toggle("on",s==="on");
+}
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=()=>rej(new Error("Couldn't load the notification service."));document.head.appendChild(s)})}
+async function enablePush(){
+  const s=notifyState();
+  if(s==="notready"){toast("Reminders aren't set up yet. The owner needs to finish the Firebase step.");return}
+  if(s==="blocked"){toast("Notifications are blocked. Allow them in your browser's site settings, then try again.");return}
+  if(s==="on"){try{const n=await api("testPush",token);toast("Test reminder sent to "+n+" phone"+(n===1?"":"s"))}catch(e){failToast(e)}return}
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm!=="granted"){toast("Reminders stay off. You can turn them on later.");renderNotifyBtn();return}
+    const V="10.12.2";
+    await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-app-compat.js`);
+    await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-messaging-compat.js`);
+    const cfg=window.STARLINE_FIREBASE;
+    if(!firebase.apps.length)firebase.initializeApp(cfg);
+    const reg=await navigator.serviceWorker.register("sw.js");
+    await navigator.serviceWorker.ready;
+    const tok=await firebase.messaging().getToken({vapidKey:cfg.vapidKey,serviceWorkerRegistration:reg});
+    if(!tok)throw new Error("Couldn't turn on reminders on this phone.");
+    await api("saveDevice",token,tok);
+    store.set("starline_push","on");renderNotifyBtn();
+    toast("Reminders on. You'll get a summary every morning.");
+  }catch(e){failToast(e)}
+}
+document.addEventListener("click",e=>{if(e.target.closest("#notifyBtn"))enablePush()});
+
 /* ---------- preview backend (used only when opened outside Google Apps Script) ---------- */
 function makeMock(){
   const wait=v=>new Promise(r=>setTimeout(()=>r(JSON.parse(JSON.stringify(v))),250));
@@ -809,6 +985,11 @@ function makeMock(){
       if(p.stage&&p.stage!==o.stage)o.log=[...(o.log||[]),{at,by:me,text:"Stage → "+ST[p.stage].t}];
       Object.assign(o,p);o.log=[...(o.log||[]),...(notes||[]).map(t=>({at,by:me,text:t}))];return wait(o)})(),
     deleteLead:(tk,id)=>chk(tk)||(db.leads=db.leads.filter(x=>x.id!==id),wait(true)),
+    listProperties:tk=>chk(tk)||wait(db.props||(db.props=[{id:"p1",published:true,name:"Sample – Global City Heights",location:"Global City, Virar West",config:["1 BHK","2 BHK"],price:"₹38 L onwards",priceLakh:38,status:"Under Construction",area:"380–620 sq ft",possession:"Dec 2027",description:"Sample listing for preview.",photos:[]}])),
+    saveProperty:(tk,p)=>chk(tk)||(()=>{db.props=db.props||[];const o={...p,id:p.id||"p"+Date.now()};const i=db.props.findIndex(x=>x.id===o.id);if(i>=0)db.props[i]=o;else db.props.unshift(o);return wait(o)})(),
+    deleteProperty:(tk,id)=>chk(tk)||(db.props=(db.props||[]).filter(x=>x.id!==id),wait(true)),
+    uploadPhoto:(tk,b64)=>chk(tk)||wait("data:image/jpeg;base64,"+b64),
+    saveDevice:tk=>chk(tk)||wait(true),testPush:tk=>chk(tk)||wait(1),
     saveTemplates:(tk,items)=>chk(tk)||(db.tpls=items.map((t,i)=>({id:"t"+i,...t})),wait(db.tpls))
   };
 }
@@ -819,6 +1000,16 @@ $("#hdrLogo").src=$("#lgLogo").src;
 resetForm();
 token=store.get(TOKEN_KEY);
 if(token)startApp();else showLogin();
+async function listenForeground(){
+  if(notifyState()!=="on")return;
+  try{const V="10.12.2";
+    await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-app-compat.js`);
+    await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-messaging-compat.js`);
+    if(!firebase.apps.length)firebase.initializeApp(window.STARLINE_FIREBASE);
+    firebase.messaging().onMessage(m=>{const d=m.data||{};toast((d.title||"Reminder")+(d.body?": "+d.body:""));refresh()});
+  }catch(e){}
+}
+listenForeground();
 })();
 
 </script>
